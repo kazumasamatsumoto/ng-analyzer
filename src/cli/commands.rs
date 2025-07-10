@@ -22,7 +22,6 @@ pub enum Commands {
     /// Analyze Angular components for best practices and performance
     Component {
         /// Path to analyze
-        #[arg(short, long, default_value = "./src")]
         path: PathBuf,
         
         /// Maximum complexity threshold
@@ -45,7 +44,6 @@ pub enum Commands {
     /// Analyze dependencies and architectural patterns
     Deps {
         /// Path to analyze
-        #[arg(short, long, default_value = "./src")]
         path: PathBuf,
         
         /// Check for circular dependencies
@@ -68,7 +66,6 @@ pub enum Commands {
     /// Analyze state management patterns and reactive programming
     State {
         /// Path to analyze
-        #[arg(short, long, default_value = "./src")]
         path: PathBuf,
         
         /// Analyze NgRx patterns
@@ -91,7 +88,6 @@ pub enum Commands {
     /// Analyze performance implications and optimization opportunities
     Performance {
         /// Path to analyze
-        #[arg(short, long, default_value = "./src")]
         path: PathBuf,
         
         /// Check bundle size impact
@@ -114,7 +110,6 @@ pub enum Commands {
     /// Run comprehensive audit with all analyzers
     Audit {
         /// Path to analyze
-        #[arg(short, long, default_value = "./src")]
         path: PathBuf,
         
         /// Run all analyzers
@@ -167,7 +162,6 @@ pub enum Commands {
     /// Search for keywords in project files
     Search {
         /// Path to search in
-        #[arg(short, long, default_value = "./src")]
         path: PathBuf,
         
         /// Keyword to search for
