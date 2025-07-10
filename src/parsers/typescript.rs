@@ -16,6 +16,10 @@ impl TypeScriptParser {
             source_map: Arc::new(SourceMap::default()),
         }
     }
+    
+    fn normalize_path(path: &PathBuf) -> String {
+        path.display().to_string().replace('\\', "/")
+    }
 
     pub fn parse_file(&self, content: &str) -> Result<Module> {
         let input = StringInput::new(content, BytePos(0), BytePos(content.len() as u32));
@@ -98,7 +102,7 @@ impl TypeScriptParser {
 
                                 return Ok(Some(NgComponent {
                                     name: class_decl.ident.sym.to_string(),
-                                    file_path: file_path.clone(),
+                                    file_path: Self::normalize_path(file_path),
                                     selector,
                                     template_url,
                                     template,
@@ -160,7 +164,7 @@ impl TypeScriptParser {
 
             return Ok(Some(NgService {
                 name: class_decl.ident.sym.to_string(),
-                file_path: file_path.clone(),
+                file_path: Self::normalize_path(file_path),
                 provided_in,
                 injectable,
                 dependencies,

@@ -35,7 +35,7 @@ impl DependencyAnalyzer {
                     severity: Severity::Error,
                     rule: "circular-dependency".to_string(),
                     message: format!("Circular dependency detected: {}", cycle.join(" -> ")),
-                    file_path: project.root_path.clone(),
+                    file_path: project.root_path.display().to_string().replace('\\', "/"),
                     line: None,
                     column: None,
                 });
@@ -129,7 +129,7 @@ impl DependencyAnalyzer {
                     severity: Severity::Warning,
                     rule: "unused-dependency".to_string(),
                     message: format!("Dependency '{}' appears to be unused", dep),
-                    file_path: project.root_path.clone(),
+                    file_path: project.root_path.display().to_string().replace('\\', "/"),
                     line: None,
                     column: None,
                 });

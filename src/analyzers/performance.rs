@@ -68,7 +68,7 @@ impl PerformanceAnalyzer {
                         "{:.1}% of components use default change detection. Consider OnPush for better performance.",
                         default_percentage
                     ),
-                    file_path: project.root_path.clone(),
+                    file_path: project.root_path.display().to_string().replace('\\', "/"),
                     line: None,
                     column: None,
                 });
@@ -106,7 +106,7 @@ impl PerformanceAnalyzer {
                     "Project has {} components in a single module. Consider implementing lazy-loaded feature modules.",
                     project.components.len()
                 ),
-                file_path: project.root_path.clone(),
+                file_path: project.root_path.display().to_string(),
                 line: None,
                 column: None,
             });
@@ -126,7 +126,7 @@ impl PerformanceAnalyzer {
                     "Average of {:.1} components per module. Consider better module organization for lazy loading.",
                     feature_components_ratio
                 ),
-                file_path: project.root_path.clone(),
+                file_path: project.root_path.display().to_string(),
                 line: None,
                 column: None,
             });

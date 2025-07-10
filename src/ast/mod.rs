@@ -14,7 +14,7 @@ pub struct NgProject {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NgComponent {
     pub name: String,
-    pub file_path: PathBuf,
+    pub file_path: String,
     pub selector: Option<String>,
     pub template_url: Option<String>,
     pub template: Option<String>,
@@ -30,7 +30,7 @@ pub struct NgComponent {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NgService {
     pub name: String,
-    pub file_path: PathBuf,
+    pub file_path: String,
     pub provided_in: Option<String>,
     pub injectable: bool,
     pub dependencies: Vec<String>,
@@ -40,7 +40,7 @@ pub struct NgService {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NgModule {
     pub name: String,
-    pub file_path: PathBuf,
+    pub file_path: String,
     pub imports: Vec<String>,
     pub exports: Vec<String>,
     pub declarations: Vec<String>,
@@ -51,14 +51,14 @@ pub struct NgModule {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NgPipe {
     pub name: String,
-    pub file_path: PathBuf,
+    pub file_path: String,
     pub pure: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NgDirective {
     pub name: String,
-    pub file_path: PathBuf,
+    pub file_path: String,
     pub selector: String,
     pub inputs: Vec<NgInput>,
     pub outputs: Vec<NgOutput>,
@@ -112,7 +112,7 @@ pub struct Issue {
     pub severity: Severity,
     pub rule: String,
     pub message: String,
-    pub file_path: PathBuf,
+    pub file_path: String,
     pub line: Option<u32>,
     pub column: Option<u32>,
 }
@@ -140,7 +140,7 @@ pub struct Recommendation {
     pub title: String,
     pub description: String,
     pub priority: Priority,
-    pub file_path: Option<PathBuf>,
+    pub file_path: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

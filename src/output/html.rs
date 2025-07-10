@@ -350,7 +350,7 @@ impl OutputFormatter for HtmlFormatter {
                     html.push_str(&format!("                    <div class=\"issue-rule\">{}</div>\n", issue.rule));
                     html.push_str(&format!("                    <div class=\"issue-message\">{}</div>\n", issue.message));
                     html.push_str(&format!("                    <div class=\"issue-location\">{}{}</div>\n", 
-                        issue.file_path.file_name().map(|s| s.to_string_lossy().to_string()).unwrap_or_else(|| "unknown".to_string()),
+                        std::path::Path::new(&issue.file_path).file_name().map(|s| s.to_string_lossy().to_string()).unwrap_or_else(|| issue.file_path.clone()),
                         issue.line.map(|l| format!(":{}", l)).unwrap_or_else(|| "".to_string())
                     ));
                     html.push_str("                </div>\n");

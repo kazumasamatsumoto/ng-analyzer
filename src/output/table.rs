@@ -72,9 +72,10 @@ impl OutputFormatter for TableFormatter {
                         } else {
                             issue.message.clone()
                         },
-                        file: issue.file_path.file_name()
-                            .map(|s| s.to_string_lossy().to_string())
-                            .unwrap_or_else(|| "unknown".to_string()),
+                        file: std::path::Path::new(&issue.file_path).file_name()
+                            .and_then(|s| s.to_str())
+                            .unwrap_or(&issue.file_path)
+                            .to_string(),
                         line: issue.line.map(|l| l.to_string()).unwrap_or_else(|| "-".to_string()),
                     }
                 }).collect();

@@ -82,7 +82,7 @@ impl ProjectParser {
                 .and_then(|s| s.to_str())
                 .unwrap_or("unknown")
                 .to_string(),
-            file_path: file_path.to_path_buf(),
+            file_path: file_path.display().to_string().replace('\\', "/"),
             imports: Vec::new(),
             exports: Vec::new(),
             declarations: Vec::new(),

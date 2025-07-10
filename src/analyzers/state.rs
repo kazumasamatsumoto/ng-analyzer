@@ -23,7 +23,7 @@ impl StateAnalyzer {
                     "Found {} services that appear to manage state. Consider using NgRx or Akita for centralized state management.",
                     services_with_state.len()
                 ),
-                file_path: project.root_path.clone(),
+                file_path: project.root_path.display().to_string(),
                 line: None,
                 column: None,
             });
@@ -144,7 +144,7 @@ impl StateAnalyzer {
                     "{} components use state services but have default change detection. Consider OnPush strategy for better performance.",
                     state_heavy_components.len()
                 ),
-                file_path: project.root_path.clone(),
+                file_path: project.root_path.display().to_string(),
                 line: None,
                 column: None,
             });
