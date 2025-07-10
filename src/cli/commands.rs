@@ -197,6 +197,30 @@ pub enum Commands {
         /// Output format (json, table, simple)
         #[arg(short, long, default_value = "simple")]
         output: String,
+        
+        /// Search type (simple, regex, html-class, html-text, function, structural)
+        #[arg(long, default_value = "simple")]
+        search_type: String,
+        
+        /// Use regular expressions for search
+        #[arg(long)]
+        regex: bool,
+        
+        /// Search for HTML class names
+        #[arg(long)]
+        html_class: bool,
+        
+        /// Search for HTML text content
+        #[arg(long)]
+        html_text: bool,
+        
+        /// Search for function names
+        #[arg(long)]
+        function_name: bool,
+        
+        /// Structural search pattern (for complex patterns)
+        #[arg(long)]
+        structural: Option<String>,
     },
 }
 

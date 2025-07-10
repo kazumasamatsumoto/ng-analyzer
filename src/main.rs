@@ -11,7 +11,7 @@ use crate::cli::{Cli, Commands, AnalysisConfig};
 use crate::config::Config;
 use crate::output::{create_multi_formatter, create_formatter};
 use crate::parsers::ProjectParser;
-use crate::search::{SearchConfig, SimpleSearchEngine};
+use crate::search::{SearchConfig, SimpleSearchEngine, SearchType, SearchEngine};
 use anyhow::Result;
 use std::path::PathBuf;
 use std::time::Instant;
@@ -90,6 +90,12 @@ async fn main() -> Result<()> {
             line_numbers,
             context,
             output,
+            search_type,
+            regex,
+            html_class,
+            html_text,
+            function_name,
+            structural,
         } => {
             let search_config = SearchConfig::new(
                 path,
@@ -103,6 +109,24 @@ async fn main() -> Result<()> {
                 cli.verbose,
                 cli.quiet,
             );
+            
+            // 検索タイプを決定
+            let search_config = if regex || search_type == "regex" {
+                search_config.with_search_type(SearchType::Regex)
+            } else if html_class || search_type == "html-class" {
+                search_config.with_search_type(SearchType::HtmlClass)
+            } else if html_text || search_type == "html-text" {
+                search_config.with_search_type(SearchType::HtmlText)
+            } else if function_name || search_type == "function" {
+                search_config.with_search_type(SearchType::FunctionName)
+            } else if let Some(pattern) = structural {
+                search_config.with_search_type(SearchType::Structural(pattern))
+            } else if search_type == "structural" {
+                return Err(anyhow::anyhow!("Structural search requires a pattern. Use --structural <pattern>"));
+            } else {
+                search_config.with_search_type(SearchType::Simple)
+            };
+            
             run_search(search_config).await?;
         }
     }
@@ -277,19 +301,22 @@ fn list_analyzers(details: bool, category: Option<String>) -> Result<()> {
 }
 
 async fn run_search(config: SearchConfig) -> Result<()> {
-    let engine = SimpleSearchEngine::new(
-        config.keyword.clone(),
-        config.file_type.clone(),
-        config.case_sensitive,
-        config.line_numbers,
-        config.context,
-    );
+    let engine = SearchEngine::new(config.clone());
     
     if !config.quiet {
-        println!("🔍 Searching for '{}' in {}", config.keyword, config.path.display());
+        let search_type_desc = match &config.search_type {
+            SearchType::Simple => "simple text",
+            SearchType::Regex => "regular expression",
+            SearchType::HtmlClass => "HTML class names",
+            SearchType::HtmlText => "HTML text content",
+            SearchType::FunctionName => "function names",
+            SearchType::Structural(_) => "structural patterns",
+        };
+        println!("🔍 Searching for '{}' using {} search in {}", 
+                 config.keyword, search_type_desc, config.path.display());
     }
     
-    let results = engine.search_in_directory(&config.path);
+    let results = engine.search().await?;
 
     if results.is_empty() {
         if !config.quiet {
@@ -298,14 +325,17 @@ async fn run_search(config: SearchConfig) -> Result<()> {
         return Ok(());
     }
 
-    let total_matches: usize = results.iter().map(|r| r.total_matches()).sum();
+    let total_matches: usize = results.iter().map(|r| r.total_matches).sum();
     
     match config.output.as_str() {
+        "json" => {
+            println!("{}", serde_json::to_string_pretty(&results)?);
+        }
         "table" => {
-            print_table_format_simple(&results, &config);
+            print_table_format(&results, &config);
         }
         "simple" | _ => {
-            print_simple_format_simple(&results, &config);
+            print_simple_format(&results, &config);
         }
     }
 
@@ -318,10 +348,10 @@ async fn run_search(config: SearchConfig) -> Result<()> {
     Ok(())
 }
 
-fn print_simple_format_simple(results: &[crate::search::SimpleSearchResult], config: &SearchConfig) {
+fn print_simple_format(results: &[crate::search::SearchResult], config: &SearchConfig) {
     for result in results {
         println!("\n📄 {}", result.file_path);
-        println!("   {} matches found", result.total_matches());
+        println!("   {} matches found", result.total_matches);
         
         for search_match in &result.matches {
             if config.line_numbers {
@@ -335,26 +365,11 @@ fn print_simple_format_simple(results: &[crate::search::SimpleSearchResult], con
             
             // Print the matching line with highlight
             let line = &search_match.line_content;
-            let search_keyword = if config.case_sensitive {
-                &config.keyword
-            } else {
-                &config.keyword.to_lowercase()
-            };
+            let before = &line[..search_match.match_start];
+            let matched = &line[search_match.match_start..search_match.match_end];
+            let after = &line[search_match.match_end..];
             
-            let search_line = if config.case_sensitive {
-                line.clone()
-            } else {
-                line.to_lowercase()
-            };
-            
-            if let Some(pos) = search_line.find(search_keyword) {
-                let before = &line[..pos];
-                let matched = &line[pos..pos + search_keyword.len()];
-                let after = &line[pos + search_keyword.len()..];
-                println!("   → {}[{}]{}", before, matched, after);
-            } else {
-                println!("   → {}", line);
-            }
+            println!("   → {}[{}]{} ({})", before, matched, after, search_match.match_type);
             
             // Print context after
             for context_line in &search_match.context_after {
@@ -364,9 +379,9 @@ fn print_simple_format_simple(results: &[crate::search::SimpleSearchResult], con
     }
 }
 
-fn print_table_format_simple(results: &[crate::search::SimpleSearchResult], config: &SearchConfig) {
-    println!("{:<40} {:<6} {:<80}", "File", "Line", "Content");
-    println!("{}", "-".repeat(126));
+fn print_table_format(results: &[crate::search::SearchResult], config: &SearchConfig) {
+    println!("{:<40} {:<6} {:<15} {:<80}", "File", "Line", "Type", "Content");
+    println!("{}", "-".repeat(141));
     
     for result in results {
         for search_match in &result.matches {
@@ -388,7 +403,8 @@ fn print_table_format_simple(results: &[crate::search::SimpleSearchResult], conf
                 search_match.line_content.clone()
             };
             
-            println!("{:<40} {:<6} {:<80}", file, line, content);
+            println!("{:<40} {:<6} {:<15} {:<80}", 
+                     file, line, search_match.match_type, content);
         }
     }
 }

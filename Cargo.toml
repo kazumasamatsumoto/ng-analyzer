@@ -41,6 +41,8 @@ thiserror = "1.0"
 async-trait = "0.1"
 # メモリマップ
 memmap2 = "0.9"
+# 正規表現
+regex = "1.10"
 
 [dev-dependencies]
 tempfile = "3.8"
