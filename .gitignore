@@ -1,0 +1,164 @@
+# Rust
+/target/
+**/*.rs.bk
+*.pdb
+Cargo.lock
+
+# IDEs and editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+node_modules/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Reports directory
+reports/
+*.html
+*.json
+analysis-report.*
+
+# Temporary files
+*.tmp
+*.temp
+.tmp/
+.temp/
+
+# Backup files
+*.bak
+*.backup
+
+# Build artifacts
+dist/
+build/
+
+# Lock files (uncomment if using a different package manager)
+# package-lock.json
+# yarn.lock
+
+# Rust-specific
+**/*.rs.bk
+*.orig
+
+# RLS (Rust Language Server)
+rls/
+
+# rust-analyzer
+rust-analyzer/
+
+# Clippy
+clippy/
+
+# Documentation
+/doc/
+
+# Local configuration
+.ng-analyzer.json
+.ng-analyzer.yaml
+.ng-analyzer.yml
+
+# Test fixtures that shouldn't be committed
+test-fixtures/
+sample-projects/
+
+# Profiling data
+*.prof
+perf.data*
+
+# Flamegraph
+flamegraph.svg
+perf.data
+perf.data.old
+
+# IDE specific files
+.vscode/settings.json
+.vscode/tasks.json
+.vscode/launch.json
+.vscode/extensions.json
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Vim
+*.swp
+*.swo
+Session.vim
+.netrwhist
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Archives
+*.7z
+*.dmg
+*.gz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+
+# Compiled binary
+ng-analyzer
+ng-analyzer.exe
