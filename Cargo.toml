@@ -25,10 +25,11 @@ walkdir = "2.3"
 ignore = "0.4"
 # TypeScript/JavaScript解析
 swc_ecma_parser = "0.140"
-swc_ecma_ast = "0.110"
-swc_common = "0.31"
+swc_ecma_ast = "0.109"
+swc_common = "0.32"
 # HTML解析
 html5ever = "0.26"
+markup5ever_rcdom = "0.2"
 # レポート生成
 tabled = "0.12"
 # 並行処理

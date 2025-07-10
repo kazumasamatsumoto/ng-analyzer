@@ -4,6 +4,7 @@ use html5ever::tree_builder::TreeBuilderOpts;
 use html5ever::driver::ParseOpts;
 use markup5ever_rcdom::{RcDom, NodeData};
 use anyhow::Result;
+use std::io::Cursor;
 
 pub struct HtmlParser;
 
@@ -23,7 +24,7 @@ impl HtmlParser {
 
         let dom = parse_document(RcDom::default(), opts)
             .from_utf8()
-            .read_from(&mut template.as_bytes())?;
+            .read_from(&mut Cursor::new(template.as_bytes()))?;
 
         let mut analysis = TemplateAnalysis::default();
         self.analyze_node(&dom.document, &mut analysis)?;

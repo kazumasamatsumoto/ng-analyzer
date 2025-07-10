@@ -3,7 +3,7 @@ use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
 pub mod simple;
-pub use simple::{SimpleSearchEngine, SearchResult as SimpleSearchResult, SearchMatch as SimpleSearchMatch};
+pub use simple::{SimpleSearchEngine, SearchResult as SimpleSearchResult};
 
 #[derive(Debug, Clone)]
 pub struct SearchConfig {

@@ -1,9 +1,9 @@
 use swc_ecma_parser::{lexer::Lexer, Parser, StringInput, Syntax, TsConfig};
 use swc_ecma_ast::*;
-use swc_common::{SourceMap, BytePos, DUMMY_SP};
+use swc_common::{SourceMap, BytePos};
 use std::sync::Arc;
 use anyhow::Result;
-use crate::ast::{NgComponent, NgService, NgModule, ChangeDetectionStrategy, NgInput, NgOutput, NgMethod, Parameter};
+use crate::ast::{NgComponent, NgService, ChangeDetectionStrategy, NgInput, NgOutput, NgMethod, Parameter};
 use std::path::PathBuf;
 
 pub struct TypeScriptParser {
@@ -74,8 +74,8 @@ impl TypeScriptParser {
         let mut style_urls = Vec::new();
         let mut change_detection = ChangeDetectionStrategy::Default;
 
-        if let Some(decorators) = &class_decl.decorators {
-            for decorator in decorators {
+        if !class_decl.class.decorators.is_empty() {
+            for decorator in &class_decl.class.decorators {
                 if let Expr::Call(call_expr) = &*decorator.expr {
                     if let Callee::Expr(expr) = &call_expr.callee {
                         if let Expr::Ident(ident) = &**expr {
@@ -123,8 +123,8 @@ impl TypeScriptParser {
         let mut provided_in = None;
         let mut injectable = false;
 
-        if let Some(decorators) = &class_decl.decorators {
-            for decorator in decorators {
+        if !class_decl.class.decorators.is_empty() {
+            for decorator in &class_decl.class.decorators {
                 if let Expr::Call(call_expr) = &*decorator.expr {
                     if let Callee::Expr(expr) = &call_expr.callee {
                         if let Expr::Ident(ident) = &**expr {
@@ -229,21 +229,17 @@ impl TypeScriptParser {
         
         for member in &class.body {
             if let ClassMember::ClassProp(prop) = member {
-                if let Some(decorators) = &prop.decorators {
-                    for decorator in decorators {
-                        if let Expr::Call(call_expr) = &*decorator.expr {
-                            if let Callee::Expr(expr) = &call_expr.callee {
-                                if let Expr::Ident(ident) = &**expr {
-                                    if ident.sym.as_ref() == "Input" {
-                                        if let Some(Key::Private(name)) = &prop.key {
-                                            if let PropName::Ident(ident) = name {
-                                                inputs.push(NgInput {
-                                                    name: ident.sym.to_string(),
-                                                    alias: None,
-                                                    input_type: "any".to_string(),
-                                                });
-                                            }
-                                        }
+                for decorator in &prop.decorators {
+                    if let Expr::Call(call_expr) = &*decorator.expr {
+                        if let Callee::Expr(expr) = &call_expr.callee {
+                            if let Expr::Ident(ident) = &**expr {
+                                if ident.sym.as_ref() == "Input" {
+                                    if let PropName::Ident(ident) = &prop.key {
+                                        inputs.push(NgInput {
+                                            name: ident.sym.to_string(),
+                                            alias: None,
+                                            input_type: "any".to_string(),
+                                        });
                                     }
                                 }
                             }
@@ -261,21 +257,17 @@ impl TypeScriptParser {
         
         for member in &class.body {
             if let ClassMember::ClassProp(prop) = member {
-                if let Some(decorators) = &prop.decorators {
-                    for decorator in decorators {
-                        if let Expr::Call(call_expr) = &*decorator.expr {
-                            if let Callee::Expr(expr) = &call_expr.callee {
-                                if let Expr::Ident(ident) = &**expr {
-                                    if ident.sym.as_ref() == "Output" {
-                                        if let Some(Key::Private(name)) = &prop.key {
-                                            if let PropName::Ident(ident) = name {
-                                                outputs.push(NgOutput {
-                                                    name: ident.sym.to_string(),
-                                                    alias: None,
-                                                    output_type: "EventEmitter".to_string(),
-                                                });
-                                            }
-                                        }
+                for decorator in &prop.decorators {
+                    if let Expr::Call(call_expr) = &*decorator.expr {
+                        if let Callee::Expr(expr) = &call_expr.callee {
+                            if let Expr::Ident(ident) = &**expr {
+                                if ident.sym.as_ref() == "Output" {
+                                    if let PropName::Ident(ident) = &prop.key {
+                                        outputs.push(NgOutput {
+                                            name: ident.sym.to_string(),
+                                            alias: None,
+                                            output_type: "EventEmitter<any>".to_string(),
+                                        });
                                     }
                                 }
                             }
@@ -339,7 +331,7 @@ impl TypeScriptParser {
                     let method_name = ident.sym.to_string();
                     if !method_name.starts_with("ng") {
                         let parameters = method.function.params.iter()
-                            .map(|param| Parameter {
+                            .map(|_param| Parameter {
                                 name: "param".to_string(),
                                 param_type: "any".to_string(),
                                 optional: false,
@@ -372,7 +364,7 @@ impl TypeScriptParser {
         Ok(complexity)
     }
 
-    fn calculate_method_complexity(&self, function: &Function) -> u32 {
+    fn calculate_method_complexity(&self, _function: &Function) -> u32 {
         1
     }
 

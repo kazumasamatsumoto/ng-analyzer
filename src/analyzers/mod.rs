@@ -3,7 +3,6 @@ use async_trait::async_trait;
 use anyhow::Result;
 use rayon::prelude::*;
 use std::collections::HashMap;
-use swc_ecma_ast::*;
 
 pub mod component;
 pub mod dependency;

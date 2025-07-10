@@ -155,12 +155,12 @@ impl AnalysisConfig {
     
     pub fn from_search_args(
         path: PathBuf,
-        keyword: String,
-        file_type: String,
-        file_pattern: Option<String>,
-        case_sensitive: bool,
-        line_numbers: bool,
-        context: u32,
+        _keyword: String,
+        _file_type: String,
+        _file_pattern: Option<String>,
+        _case_sensitive: bool,
+        _line_numbers: bool,
+        _context: u32,
         output: String,
         verbose: bool,
         quiet: bool,

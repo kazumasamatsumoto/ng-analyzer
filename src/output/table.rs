@@ -1,5 +1,5 @@
 use super::OutputFormatter;
-use crate::ast::{AnalysisResult, Severity};
+use crate::ast::AnalysisResult;
 use anyhow::Result;
 use std::fs;
 use std::path::PathBuf;

@@ -1,8 +1,7 @@
 use crate::ast::NgProject;
-use crate::parsers::TypeScriptParser;
+use crate::parsers::typescript::TypeScriptParser;
 use anyhow::Result;
 use std::path::PathBuf;
-use walkdir::WalkDir;
 use std::fs;
 use ignore::WalkBuilder;
 
@@ -62,21 +61,21 @@ impl ProjectParser {
 
     async fn parse_component_file(&self, file_path: &std::path::Path) -> Result<Option<crate::ast::NgComponent>> {
         let content = fs::read_to_string(file_path)?;
-        let module = self.typescript_parser.parse_file(&content)?;
+        let _module = self.typescript_parser.parse_file(&content)?;
         
-        self.typescript_parser.extract_component(&module, &file_path.to_path_buf())
+        self.typescript_parser.extract_component(&_module, &file_path.to_path_buf())
     }
 
     async fn parse_service_file(&self, file_path: &std::path::Path) -> Result<Option<crate::ast::NgService>> {
         let content = fs::read_to_string(file_path)?;
-        let module = self.typescript_parser.parse_file(&content)?;
+        let _module = self.typescript_parser.parse_file(&content)?;
         
-        self.typescript_parser.extract_service(&module, &file_path.to_path_buf())
+        self.typescript_parser.extract_service(&_module, &file_path.to_path_buf())
     }
 
     async fn parse_module_file(&self, file_path: &std::path::Path) -> Result<Option<crate::ast::NgModule>> {
         let content = fs::read_to_string(file_path)?;
-        let module = self.typescript_parser.parse_file(&content)?;
+        let _module = self.typescript_parser.parse_file(&content)?;
         
         Ok(Some(crate::ast::NgModule {
             name: file_path.file_stem()
