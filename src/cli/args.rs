@@ -152,6 +152,28 @@ impl AnalysisConfig {
             _ => false,
         }
     }
+    
+    pub fn from_search_args(
+        path: PathBuf,
+        keyword: String,
+        file_type: String,
+        file_pattern: Option<String>,
+        case_sensitive: bool,
+        line_numbers: bool,
+        context: u32,
+        output: String,
+        verbose: bool,
+        quiet: bool,
+    ) -> Self {
+        Self {
+            path,
+            analyzers: vec!["search".to_string()],
+            output_formats: vec![output],
+            verbose,
+            quiet,
+            ..Default::default()
+        }
+    }
 }
 
 pub fn parse_severity(s: &str) -> Result<Severity, String> {

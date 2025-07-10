@@ -163,6 +163,41 @@ pub enum Commands {
         #[arg(long)]
         category: Option<String>,
     },
+    
+    /// Search for keywords in project files
+    Search {
+        /// Path to search in
+        #[arg(short, long, default_value = "./src")]
+        path: PathBuf,
+        
+        /// Keyword to search for
+        #[arg(short, long)]
+        keyword: String,
+        
+        /// File types to search in (html, ts, js, all)
+        #[arg(short, long, default_value = "all")]
+        file_type: String,
+        
+        /// Specific file pattern to search in
+        #[arg(long)]
+        file_pattern: Option<String>,
+        
+        /// Case sensitive search
+        #[arg(long)]
+        case_sensitive: bool,
+        
+        /// Show line numbers
+        #[arg(long)]
+        line_numbers: bool,
+        
+        /// Show context lines around matches
+        #[arg(short, long, default_value = "0")]
+        context: u32,
+        
+        /// Output format (json, table, simple)
+        #[arg(short, long, default_value = "simple")]
+        output: String,
+    },
 }
 
 impl Cli {

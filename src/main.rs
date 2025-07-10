@@ -4,12 +4,14 @@ mod cli;
 mod config;
 mod output;
 mod parsers;
+mod search;
 
 use crate::analyzers::AnalysisEngine;
 use crate::cli::{Cli, Commands, AnalysisConfig};
 use crate::config::Config;
 use crate::output::{create_multi_formatter, create_formatter};
 use crate::parsers::ProjectParser;
+use crate::search::{SearchConfig, SimpleSearchEngine};
 use anyhow::Result;
 use std::path::PathBuf;
 use std::time::Instant;
@@ -78,6 +80,30 @@ async fn main() -> Result<()> {
         }
         Commands::List { details, category } => {
             list_analyzers(details, category)?;
+        }
+        Commands::Search {
+            path,
+            keyword,
+            file_type,
+            file_pattern,
+            case_sensitive,
+            line_numbers,
+            context,
+            output,
+        } => {
+            let search_config = SearchConfig::new(
+                path,
+                keyword,
+                file_type,
+                file_pattern,
+                case_sensitive,
+                line_numbers,
+                context,
+                output,
+                cli.verbose,
+                cli.quiet,
+            );
+            run_search(search_config).await?;
         }
     }
 
@@ -248,4 +274,121 @@ fn list_analyzers(details: bool, category: Option<String>) -> Result<()> {
     }
 
     Ok(())
+}
+
+async fn run_search(config: SearchConfig) -> Result<()> {
+    let engine = SimpleSearchEngine::new(
+        config.keyword.clone(),
+        config.file_type.clone(),
+        config.case_sensitive,
+        config.line_numbers,
+        config.context,
+    );
+    
+    if !config.quiet {
+        println!("🔍 Searching for '{}' in {}", config.keyword, config.path.display());
+    }
+    
+    let results = engine.search_in_directory(&config.path);
+
+    if results.is_empty() {
+        if !config.quiet {
+            println!("🔍 No matches found for '{}'", config.keyword);
+        }
+        return Ok(());
+    }
+
+    let total_matches: usize = results.iter().map(|r| r.total_matches()).sum();
+    
+    match config.output.as_str() {
+        "table" => {
+            print_table_format_simple(&results, &config);
+        }
+        "simple" | _ => {
+            print_simple_format_simple(&results, &config);
+        }
+    }
+
+    if !config.quiet {
+        println!("\n🔍 Search Summary:");
+        println!("   Files with matches: {}", results.len());
+        println!("   Total matches: {}", total_matches);
+    }
+
+    Ok(())
+}
+
+fn print_simple_format_simple(results: &[crate::search::SimpleSearchResult], config: &SearchConfig) {
+    for result in results {
+        println!("\n📄 {}", result.file_path);
+        println!("   {} matches found", result.total_matches());
+        
+        for search_match in &result.matches {
+            if config.line_numbers {
+                println!("   {}:", search_match.line_number);
+            }
+            
+            // Print context before
+            for context_line in &search_match.context_before {
+                println!("     {}", context_line);
+            }
+            
+            // Print the matching line with highlight
+            let line = &search_match.line_content;
+            let search_keyword = if config.case_sensitive {
+                &config.keyword
+            } else {
+                &config.keyword.to_lowercase()
+            };
+            
+            let search_line = if config.case_sensitive {
+                line.clone()
+            } else {
+                line.to_lowercase()
+            };
+            
+            if let Some(pos) = search_line.find(search_keyword) {
+                let before = &line[..pos];
+                let matched = &line[pos..pos + search_keyword.len()];
+                let after = &line[pos + search_keyword.len()..];
+                println!("   → {}[{}]{}", before, matched, after);
+            } else {
+                println!("   → {}", line);
+            }
+            
+            // Print context after
+            for context_line in &search_match.context_after {
+                println!("     {}", context_line);
+            }
+        }
+    }
+}
+
+fn print_table_format_simple(results: &[crate::search::SimpleSearchResult], config: &SearchConfig) {
+    println!("{:<40} {:<6} {:<80}", "File", "Line", "Content");
+    println!("{}", "-".repeat(126));
+    
+    for result in results {
+        for search_match in &result.matches {
+            let file = if result.file_path.len() > 35 {
+                format!("...{}", &result.file_path[result.file_path.len()-32..])
+            } else {
+                result.file_path.clone()
+            };
+            
+            let line = if config.line_numbers {
+                search_match.line_number.to_string()
+            } else {
+                "-".to_string()
+            };
+            
+            let content = if search_match.line_content.len() > 75 {
+                format!("{}...", &search_match.line_content[..72])
+            } else {
+                search_match.line_content.clone()
+            };
+            
+            println!("{:<40} {:<6} {:<80}", file, line, content);
+        }
+    }
 }
