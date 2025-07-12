@@ -1,6 +1,7 @@
-pub mod json;
 pub mod html;
+pub mod json;
 pub mod table;
+pub mod graph;
 
 use crate::ast::AnalysisResult;
 use anyhow::Result;

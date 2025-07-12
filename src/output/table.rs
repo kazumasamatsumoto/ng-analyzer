@@ -18,6 +18,7 @@ impl TableFormatter {
         }
     }
 
+    #[allow(dead_code)]
     pub fn new_minimal() -> Self {
         Self {
             show_recommendations: false,

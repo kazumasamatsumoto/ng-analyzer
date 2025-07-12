@@ -6,6 +6,7 @@ use rayon::prelude::*;
 
 pub struct ComponentAnalyzer {
     max_complexity: u32,
+    #[allow(dead_code)]
     max_depth: u32,
     max_inputs: usize,
     max_outputs: usize,
@@ -17,10 +18,11 @@ impl ComponentAnalyzer {
             max_complexity: 10,
             max_depth: 5,
             max_inputs: 10,
-            max_outputs: 5,
+            max_outputs: 10,
         }
     }
 
+    #[allow(dead_code)]
     pub fn with_config(max_complexity: u32, max_depth: u32, max_inputs: usize, max_outputs: usize) -> Self {
         Self {
             max_complexity,

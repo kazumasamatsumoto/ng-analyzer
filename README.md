@@ -13,6 +13,7 @@ Rust で構築された高性能な Angular プロジェクト分析ツールで
 - 📈 **詳細なメトリクス**: プロジェクト統計と複雑度測定
 - 🔍 **高度な検索**: 正規表現、HTML クラス、関数名、構造的検索をサポート
 - 🔧 **クロスプラットフォーム**: Windows、macOS、Linux で統一されたファイルパス表示
+- 🌐 **依存関係グラフ**: TypeScript ファイルの import/export 関係を可視化（Mermaid、DOT、JSON、テーブル形式）
 
 ## インストール
 
@@ -509,6 +510,243 @@ ng-analyzer search ./src --keyword "RouterModule|Routes" --regex --file-type ts
 - JSON 出力でスクリプト処理
 - テーブル出力で一覧表示
 - シンプル出力で詳細確認
+
+### 9. 依存関係グラフ分析
+
+TypeScript プロジェクトの import/export 関係を分析し、依存関係を可視化します。
+
+#### 基本的な使用方法
+
+```bash
+# 基本的な依存関係グラフ分析
+ng-analyzer graph ./src
+
+# 特定のフォーマットで出力
+ng-analyzer graph ./src --format mermaid
+
+# 出力ファイルを指定
+ng-analyzer graph ./src --format mermaid --output dependencies.mmd
+
+# 循環依存関係のみを表示
+ng-analyzer graph ./src --circular
+
+# 孤立したファイルを表示
+ng-analyzer graph ./src --orphaned
+```
+
+#### 出力フォーマット
+
+**Mermaid 形式（推奨）**
+
+```bash
+ng-analyzer graph ./src --format mermaid
+
+# 出力例:
+graph TD
+    A["sample-app.ts<br/>Component"] --> B["sample-utils.ts<br/>Service"]
+    C["sample-main.ts<br/>Component"] --> A
+    C --> B
+
+    classDef component fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
+    classDef service fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef module fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
+    classDef interface fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    classDef other fill:#f5f5f5,stroke:#616161,stroke-width:2px
+
+    class A,C component
+    class B service
+```
+
+**DOT 形式（Graphviz）**
+
+```bash
+ng-analyzer graph ./src --format dot
+
+# 出力例:
+digraph dependencies {
+    rankdir=TB;
+    node [shape=box, style=filled];
+
+    "sample-app.ts" [fillcolor="#e1f5fe", label="sample-app.ts\nComponent"];
+    "sample-utils.ts" [fillcolor="#f3e5f5", label="sample-utils.ts\nService"];
+    "sample-main.ts" [fillcolor="#e1f5fe", label="sample-main.ts\nComponent"];
+
+    "sample-app.ts" -> "sample-utils.ts";
+    "sample-main.ts" -> "sample-app.ts";
+    "sample-main.ts" -> "sample-utils.ts";
+}
+```
+
+**JSON 形式**
+
+```bash
+ng-analyzer graph ./src --format json
+
+# 出力例:
+{
+  "files": [
+    {
+      "id": "sample-app.ts",
+      "file_path": "./src/sample-app.ts",
+      "file_type": "Component",
+      "imports": [
+        {
+          "from": "sample-utils.ts",
+          "symbols": ["User", "UserService", "validateUser", "formatUserName"]
+        }
+      ],
+      "exports": [
+        {
+          "symbol": "App",
+          "export_type": "Default"
+        }
+      ]
+    }
+  ],
+  "dependencies": [
+    {
+      "from": "sample-app.ts",
+      "to": "sample-utils.ts",
+      "dependency_type": "Direct",
+      "symbols": ["User", "UserService", "validateUser", "formatUserName"]
+    }
+  ],
+  "analysis": {
+    "total_files": 5,
+    "total_dependencies": 3,
+    "circular_dependencies": [],
+    "orphaned_files": ["sample-standalone.ts"],
+    "most_popular_files": [
+      {
+        "file": "sample-utils.ts",
+        "import_count": 2
+      }
+    ]
+  }
+}
+```
+
+**テーブル形式**
+
+```bash
+ng-analyzer graph ./src --format table
+
+# 出力例:
+📊 TypeScript 依存関係グラフ分析
+
+📂 ファイル概要:
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│ ファイル                      │ タイプ         │ インポート │ エクスポート │ 依存関係 │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│ sample-app.ts                │ Component     │ 4          │ 1           │ 1        │
+│ sample-utils.ts              │ Service       │ 0          │ 4           │ 0        │
+│ sample-main.ts               │ Component     │ 2          │ 0           │ 2        │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+
+🔗 依存関係:
+┌─────────────────────────────────────────────────────────────────────────────────────┐
+│ From                         │ To                          │ シンボル                │
+├─────────────────────────────────────────────────────────────────────────────────────┤
+│ sample-app.ts                │ sample-utils.ts             │ User, UserService, ... │
+│ sample-main.ts               │ sample-app.ts               │ App                    │
+│ sample-main.ts               │ sample-utils.ts             │ User                   │
+└─────────────────────────────────────────────────────────────────────────────────────┘
+
+📈 統計:
+• 総ファイル数: 5
+• 総依存関係数: 3
+• 循環依存: なし
+• 孤立ファイル: 1
+• 最も人気のファイル: sample-utils.ts (2回インポート)
+```
+
+#### 高度な分析オプション
+
+```bash
+# 依存関係の深度を分析
+ng-analyzer graph ./src --depth
+
+# 上位N個の人気ファイルを表示
+ng-analyzer graph ./src --top-count 5
+
+# 特定の拡張子のみを対象
+ng-analyzer graph ./src --extensions ts,tsx
+
+# 外部ライブラリの依存関係を除外
+ng-analyzer graph ./src --exclude-external
+```
+
+#### 実用的な使用例
+
+**1. プロジェクトの依存関係を可視化**
+
+```bash
+# Mermaid形式でグラフを生成し、ドキュメントに埋め込み
+ng-analyzer graph ./src --format mermaid --output docs/dependencies.mmd
+
+# Graphvizで画像として出力
+ng-analyzer graph ./src --format dot --output dependencies.dot
+dot -Tpng dependencies.dot -o dependencies.png
+```
+
+**2. 循環依存関係の検出**
+
+```bash
+# 循環依存関係のみを検出
+ng-analyzer graph ./src --circular --format table
+
+# 循環依存関係をJSON形式で出力し、CI/CDで利用
+ng-analyzer graph ./src --circular --format json > circular-deps.json
+```
+
+**3. リファクタリング支援**
+
+```bash
+# 孤立したファイルを特定
+ng-analyzer graph ./src --orphaned
+
+# 最も依存されているファイルを特定
+ng-analyzer graph ./src --format json | jq '.analysis.most_popular_files'
+
+# 特定のファイルの依存関係を分析
+ng-analyzer graph ./src --format json | jq '.dependencies[] | select(.from == "target-file.ts")'
+```
+
+**4. アーキテクチャの分析**
+
+```bash
+# 依存関係の深度を分析
+ng-analyzer graph ./src --depth --format table
+
+# コンポーネントのみの依存関係を分析
+ng-analyzer graph ./src/components --format mermaid
+```
+
+#### グラフ可視化のベストプラクティス
+
+**Mermaid 形式**
+
+- GitHub や GitLab でそのまま可視化可能
+- ドキュメントに埋め込みやすい
+- ファイルタイプ別に色分けされる
+
+**DOT 形式**
+
+- 大規模プロジェクトでも見やすい
+- 画像として出力可能
+- 循環依存関係が赤色で強調される
+
+**JSON 形式**
+
+- プログラムでの解析に最適
+- CI/CD パイプラインで活用
+- カスタムレポートの作成に便利
+
+**テーブル形式**
+
+- 統計情報が豊富
+- 日本語で分かりやすい
+- ターミナルで即座に確認可能
 
 ## 出力フォーマット
 

@@ -1,4 +1,4 @@
-use crate::ast::{AnalysisResult, NgProject, Issue, Severity};
+use crate::ast::{AnalysisResult, NgProject, Issue};
 use async_trait::async_trait;
 use anyhow::Result;
 use rayon::prelude::*;
@@ -6,23 +6,27 @@ use std::collections::HashMap;
 
 pub mod component;
 pub mod dependency;
-pub mod state;
 pub mod performance;
+pub mod state;
+pub mod dependency_graph;
 
 #[async_trait]
 pub trait Analyzer: Send + Sync {
     async fn analyze(&self, project: &NgProject) -> Result<AnalysisResult>;
+    #[allow(dead_code)]
     fn name(&self) -> &'static str;
+    #[allow(dead_code)]
     fn description(&self) -> &'static str;
 }
 
-#[async_trait]
+#[allow(dead_code)]
 pub trait Rule: Send + Sync {
-    async fn check(&self, node: &AstNode) -> Result<Vec<Issue>>;
-    fn severity(&self) -> Severity;
     fn name(&self) -> &'static str;
+    fn description(&self) -> &'static str;
+    fn check(&self, node: &AstNode) -> Result<Vec<Issue>>;
 }
 
+#[allow(dead_code)]
 pub struct AstNode {
     pub node_type: String,
     pub content: String,
@@ -62,6 +66,7 @@ impl AnalysisEngine {
         results
     }
 
+    #[allow(dead_code)]
     pub fn list_analyzers(&self) -> Vec<&str> {
         self.analyzers.keys().map(|s| s.as_str()).collect()
     }

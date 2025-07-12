@@ -79,8 +79,9 @@ impl Default for Config {
 }
 
 impl Config {
+    #[allow(dead_code)]
     pub fn load_from_file(path: &PathBuf) -> Result<Self> {
-        let content = fs::read_to_string(path)?;
+        let content = std::fs::read_to_string(path)?;
         let config: Config = serde_json::from_str(&content)?;
         Ok(config)
     }
@@ -91,6 +92,21 @@ impl Config {
         Ok(())
     }
 
+    pub fn new() -> Self {
+        Self {
+            profiles: HashMap::new(),
+            rules: HashMap::new(),
+            ignore: Vec::new(),
+            output: OutputConfig {
+                formats: vec!["json".to_string()],
+                path: PathBuf::from("./reports"),
+                include_recommendations: true,
+                include_metrics: true,
+            },
+        }
+    }
+
+    #[allow(dead_code)]
     pub fn get_profile(&self, name: &str) -> Option<&Profile> {
         self.profiles.get(name)
     }

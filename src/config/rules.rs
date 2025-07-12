@@ -192,6 +192,7 @@ pub fn get_all_rule_definitions() -> Vec<RuleDefinition> {
     ]
 }
 
+#[allow(dead_code)]
 pub fn get_rule_definition(name: &str) -> Option<RuleDefinition> {
     get_all_rule_definitions().into_iter().find(|rule| rule.name == name)
 }

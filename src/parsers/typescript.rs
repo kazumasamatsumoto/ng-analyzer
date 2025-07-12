@@ -4,9 +4,11 @@ use swc_common::{SourceMap, BytePos};
 use std::sync::Arc;
 use anyhow::Result;
 use crate::ast::{NgComponent, NgService, ChangeDetectionStrategy, NgInput, NgOutput, NgMethod, Parameter};
+use crate::ast::{Import, Export, ImportType, ExportType, FileType};
 use std::path::PathBuf;
 
 pub struct TypeScriptParser {
+    #[allow(dead_code)]
     source_map: Arc<SourceMap>,
 }
 
@@ -69,6 +71,202 @@ impl TypeScriptParser {
             }
         }
         Ok(None)
+    }
+
+    pub fn extract_imports_exports(&self, module: &Module, file_path: &PathBuf) -> Result<(Vec<Import>, Vec<Export>)> {
+        let mut imports = Vec::new();
+        let mut exports = Vec::new();
+
+        for item in &module.body {
+            match item {
+                ModuleItem::ModuleDecl(module_decl) => {
+                    match module_decl {
+                        ModuleDecl::Import(import_decl) => {
+                            let source_module = import_decl.src.value.to_string();
+                            
+                            for specifier in &import_decl.specifiers {
+                                match specifier {
+                                    ImportSpecifier::Named(named) => {
+                                        let symbol_name = match &named.imported {
+                                            Some(ModuleExportName::Ident(ident)) => ident.sym.to_string(),
+                                            _ => named.local.sym.to_string(),
+                                        };
+                                        imports.push(Import {
+                                            file_path: Self::normalize_path(file_path),
+                                            symbol_name,
+                                            source_module: source_module.clone(),
+                                            import_type: ImportType::Named,
+                                            line_number: None,
+                                        });
+                                    }
+                                    ImportSpecifier::Default(default) => {
+                                        imports.push(Import {
+                                            file_path: Self::normalize_path(file_path),
+                                            symbol_name: default.local.sym.to_string(),
+                                            source_module: source_module.clone(),
+                                            import_type: ImportType::Default,
+                                            line_number: None,
+                                        });
+                                    }
+                                    ImportSpecifier::Namespace(namespace) => {
+                                        imports.push(Import {
+                                            file_path: Self::normalize_path(file_path),
+                                            symbol_name: namespace.local.sym.to_string(),
+                                            source_module: source_module.clone(),
+                                            import_type: ImportType::Namespace,
+                                            line_number: None,
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                        ModuleDecl::ExportDecl(export_decl) => {
+                            match &export_decl.decl {
+                                Decl::Class(class_decl) => {
+                                    exports.push(Export {
+                                        file_path: Self::normalize_path(file_path),
+                                        symbol_name: class_decl.ident.sym.to_string(),
+                                        export_type: ExportType::Named,
+                                        line_number: None,
+                                    });
+                                }
+                                Decl::Fn(fn_decl) => {
+                                    exports.push(Export {
+                                        file_path: Self::normalize_path(file_path),
+                                        symbol_name: fn_decl.ident.sym.to_string(),
+                                        export_type: ExportType::Named,
+                                        line_number: None,
+                                    });
+                                }
+                                Decl::Var(var_decl) => {
+                                    for decl in &var_decl.decls {
+                                        if let Pat::Ident(ident) = &decl.name {
+                                            exports.push(Export {
+                                                file_path: Self::normalize_path(file_path),
+                                                symbol_name: ident.id.sym.to_string(),
+                                                export_type: ExportType::Named,
+                                                line_number: None,
+                                            });
+                                        }
+                                    }
+                                }
+                                Decl::TsInterface(interface_decl) => {
+                                    exports.push(Export {
+                                        file_path: Self::normalize_path(file_path),
+                                        symbol_name: interface_decl.id.sym.to_string(),
+                                        export_type: ExportType::Named,
+                                        line_number: None,
+                                    });
+                                }
+                                Decl::TsTypeAlias(type_alias) => {
+                                    exports.push(Export {
+                                        file_path: Self::normalize_path(file_path),
+                                        symbol_name: type_alias.id.sym.to_string(),
+                                        export_type: ExportType::Named,
+                                        line_number: None,
+                                    });
+                                }
+                                Decl::TsEnum(enum_decl) => {
+                                    exports.push(Export {
+                                        file_path: Self::normalize_path(file_path),
+                                        symbol_name: enum_decl.id.sym.to_string(),
+                                        export_type: ExportType::Named,
+                                        line_number: None,
+                                    });
+                                }
+                                _ => {}
+                            }
+                        }
+                        ModuleDecl::ExportNamed(export_named) => {
+                            for specifier in &export_named.specifiers {
+                                match specifier {
+                                    ExportSpecifier::Named(named) => {
+                                                                let symbol_name = match &named.exported {
+                            Some(ModuleExportName::Ident(ident)) => ident.sym.to_string(),
+                            _ => match &named.orig {
+                                ModuleExportName::Ident(ident) => ident.sym.to_string(),
+                                ModuleExportName::Str(s) => s.value.to_string(),
+                            },
+                        };
+                                        exports.push(Export {
+                                            file_path: Self::normalize_path(file_path),
+                                            symbol_name,
+                                            export_type: if export_named.src.is_some() {
+                                                ExportType::ReExport
+                                            } else {
+                                                ExportType::Named
+                                            },
+                                            line_number: None,
+                                        });
+                                    }
+                                    _ => {}
+                                }
+                            }
+                        }
+                        ModuleDecl::ExportDefaultDecl(export_default) => {
+                            let symbol_name = match &export_default.decl {
+                                DefaultDecl::Class(class_expr) => {
+                                    if let Some(ident) = &class_expr.ident {
+                                        ident.sym.to_string()
+                                    } else {
+                                        "default".to_string()
+                                    }
+                                }
+                                DefaultDecl::Fn(fn_expr) => {
+                                    if let Some(ident) = &fn_expr.ident {
+                                        ident.sym.to_string()
+                                    } else {
+                                        "default".to_string()
+                                    }
+                                }
+                                DefaultDecl::TsInterfaceDecl(interface) => {
+                                    interface.id.sym.to_string()
+                                }
+                            };
+                            exports.push(Export {
+                                file_path: Self::normalize_path(file_path),
+                                symbol_name,
+                                export_type: ExportType::Default,
+                                line_number: None,
+                            });
+                        }
+                        ModuleDecl::ExportDefaultExpr(_) => {
+                            exports.push(Export {
+                                file_path: Self::normalize_path(file_path),
+                                symbol_name: "default".to_string(),
+                                export_type: ExportType::Default,
+                                line_number: None,
+                            });
+                        }
+                        ModuleDecl::ExportAll(_) => {
+                            exports.push(Export {
+                                file_path: Self::normalize_path(file_path),
+                                symbol_name: "*".to_string(),
+                                export_type: ExportType::Namespace,
+                                line_number: None,
+                            });
+                        }
+                        _ => {}
+                    }
+                }
+                _ => {}
+            }
+        }
+
+        Ok((imports, exports))
+    }
+
+    pub fn get_file_type(&self, file_path: &PathBuf) -> FileType {
+        let extension = file_path.extension()
+            .and_then(|ext| ext.to_str())
+            .unwrap_or("");
+        
+        match extension {
+            "ts" => FileType::TypeScript,
+            "js" => FileType::JavaScript,
+            "d.ts" => FileType::Declaration,
+            _ => FileType::Module,
+        }
     }
 
     fn analyze_class_for_component(&self, class_decl: &ClassDecl, file_path: &PathBuf) -> Result<Option<NgComponent>> {

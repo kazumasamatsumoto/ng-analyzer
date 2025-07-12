@@ -216,6 +216,44 @@ pub enum Commands {
         #[arg(long)]
         structural: Option<String>,
     },
+    
+    /// Analyze TypeScript import/export relationships and generate dependency graphs
+    Graph {
+        /// Path to analyze
+        path: PathBuf,
+        
+        /// Output format (dot, mermaid, json, table)
+        #[arg(short, long, default_value = "mermaid")]
+        format: String,
+        
+        /// Output file path
+        #[arg(short, long)]
+        output: Option<PathBuf>,
+        
+        /// Include circular dependency analysis
+        #[arg(long)]
+        circular: bool,
+        
+        /// Include orphaned file detection
+        #[arg(long)]
+        orphaned: bool,
+        
+        /// Include dependency depth analysis
+        #[arg(long)]
+        depth: bool,
+        
+        /// Maximum number of files to show in top lists
+        #[arg(long, default_value = "10")]
+        top_count: u32,
+        
+        /// Filter files by extension (ts, js, tsx, jsx)
+        #[arg(long, value_delimiter = ',')]
+        extensions: Option<Vec<String>>,
+        
+        /// Exclude node_modules and other directories
+        #[arg(long)]
+        exclude_external: bool,
+    },
 }
 
 impl Cli {

@@ -13,10 +13,11 @@ impl HtmlFormatter {
     pub fn new() -> Self {
         Self {
             include_css: true,
-            include_js: true,
+            include_js: false,
         }
     }
 
+    #[allow(dead_code)]
     pub fn new_minimal() -> Self {
         Self {
             include_css: false,

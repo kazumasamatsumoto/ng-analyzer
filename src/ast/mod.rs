@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct NgProject {
@@ -150,6 +151,96 @@ pub enum Priority {
     Low,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ImportExportGraph {
+    pub files: Vec<FileInfo>,
+    pub dependencies: Vec<Dependency>,
+    pub exports: Vec<Export>,
+    pub imports: Vec<Import>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FileInfo {
+    pub id: String,
+    pub file_path: String,
+    pub relative_path: String,
+    pub file_type: FileType,
+    pub exports: Vec<String>,
+    pub imports: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Dependency {
+    pub from_file: String,
+    pub to_file: String,
+    pub import_type: ImportType,
+    pub imported_symbols: Vec<String>,
+    pub line_number: Option<u32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Export {
+    pub file_path: String,
+    pub symbol_name: String,
+    pub export_type: ExportType,
+    pub line_number: Option<u32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Import {
+    pub file_path: String,
+    pub symbol_name: String,
+    pub source_module: String,
+    pub import_type: ImportType,
+    pub line_number: Option<u32>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum FileType {
+    TypeScript,
+    JavaScript,
+    Declaration,
+    Module,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ImportType {
+    Default,
+    Named,
+    Namespace,
+    Dynamic,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum ExportType {
+    Default,
+    Named,
+    Namespace,
+    ReExport,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct DependencyAnalysis {
+    pub circular_dependencies: Vec<CircularDependency>,
+    pub orphaned_files: Vec<String>,
+    pub dependency_depth: HashMap<String, u32>,
+    pub most_imported_files: Vec<(String, u32)>,
+    pub most_dependent_files: Vec<(String, u32)>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CircularDependency {
+    pub cycle: Vec<String>,
+    pub severity: CycleSeverity,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub enum CycleSeverity {
+    Critical,
+    Warning,
+    Info,
+}
+
 impl Default for NgProject {
     fn default() -> Self {
         Self {
@@ -170,6 +261,29 @@ impl Default for AnalysisResult {
             issues: Vec::new(),
             metrics: ProjectMetrics::default(),
             recommendations: Vec::new(),
+        }
+    }
+}
+
+impl Default for ImportExportGraph {
+    fn default() -> Self {
+        Self {
+            files: Vec::new(),
+            dependencies: Vec::new(),
+            exports: Vec::new(),
+            imports: Vec::new(),
+        }
+    }
+}
+
+impl Default for DependencyAnalysis {
+    fn default() -> Self {
+        Self {
+            circular_dependencies: Vec::new(),
+            orphaned_files: Vec::new(),
+            dependency_depth: HashMap::new(),
+            most_imported_files: Vec::new(),
+            most_dependent_files: Vec::new(),
         }
     }
 }

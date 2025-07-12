@@ -11,11 +11,16 @@ pub struct JsonFormatter {
 
 impl JsonFormatter {
     pub fn new() -> Self {
-        Self { pretty: true }
+        Self {
+            pretty: true,
+        }
     }
 
+    #[allow(dead_code)]
     pub fn new_compact() -> Self {
-        Self { pretty: false }
+        Self {
+            pretty: false,
+        }
     }
 }
 
